@@ -12,8 +12,10 @@ class Xgboost_Run:
                           early_stopping_rounds=100,
                           verbose=50)
         prob = self.model.predict(test[0], ntree_limit=self.model.best_iteration)
-        e = rmse(test[1], prob)
-        print('test RMSE: {0:.6f}'.format(e))
+        e = wrmse(test[1].iloc[:,0], prob, test[1].iloc[:,1])
+        e2 = rmse(test[1].iloc[:, 0], prob)
+        print('test WRMSE: {0:.6f}'.format(e))
+        print('test RMSE: {0:.6f}'.format(e2))
 
         return prob
 

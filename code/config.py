@@ -2,7 +2,8 @@ class Config:
     def __init__(self):
         self.target = 'OPS'
         self.target2 = ['OBP','SLG']
-        self.features = ['year','batter_name','team','height/weight','year_born','position','starting_salary']
+        self.features = ['year','batter_name','height/weight','year_born','starting_salary','SLG','OBP','OPS','AB']
+        self.cat_features = ['position','team']
         self.params = {
                     "learning_rate": 0.1,
                     "n_estimators": 10000,
