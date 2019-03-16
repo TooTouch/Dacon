@@ -13,27 +13,36 @@ def dummy_feature(df, variables):
     return df
 
 def split_data(data, config, target):
-    feature = list(set(config.features + config.cat_features + config.lag_features))
+
+    lag_features = config.lag_features.copy()
+    total_features = config.total_features.copy()
+
+    feature = list(set(config.features + config.cat_features + lag_features))
     data = data[feature]
 
     names = data.batter_name.unique()
 
 
-    for f in tqdm(range(len(config.lag_features))):
-        data.loc[:,'lag_1_' + config.lag_features[f]] = data.apply(lambda x: lag_n(data, x['batter_name'], x['year'], config.lag_features[f]), axis=1)
-        # data.loc[:,'lag_2_' + config.lag_features[f]] = data.apply(lambda x: lag_n(data, x['batter_name'], x['year'], config.lag_features[f], lag_num=2), axis=1)
+    # data = get_luck(data)
+    # lag_features.extend(['1B', '1b_luck', '2b_luck', '3b_luck'])
+    # total_features.append('1B')
+    # print('## luck')
+
+
+    for f in tqdm(range(len(lag_features))):
+        data.loc[:,'lag_1_' + lag_features[f]] = data.apply(lambda x: lag_n(data, x['batter_name'], x['year'], lag_features[f]), axis=1)
     print('## lag_n')
 
-    for f in tqdm(range(len(config.total_features))):
-        data.loc[:,'total_' + config.total_features[f]] = data.apply(lambda x: get_total(data, x['batter_name'], x['year'], config.total_features[f]), axis=1)
+    for f in tqdm(range(len(total_features))):
+        data.loc[:,'total_' + total_features[f]] = data.apply(lambda x: get_total(data, x['batter_name'], x['year'], total_features[f]), axis=1)
     print('## total')
 
-    data = get_luck(data)
-    config.lag_features.append(['1B', '1b_luck', '2b_luck', '3b_luck'])
-    print('## luck')
 
-    # data = split_position(data)
-    # print('## split_position')
+
+    data = split_position(data)
+    print('## split_position')
+    data = height_weight_fillna(data)
+    print('## fill na height/weight')
     data = weight_height_(data)
     print('## height/weight')
     data = age_(data)
@@ -69,14 +78,15 @@ def split_data(data, config, target):
     print('## from inter')
 
     data = categorical_variables(data, ['position'])
-    # print('## dummy variables')
+    print('## dummy variables')
+
     if target == 'OPS':
         data.OPS = data.OPS.fillna(0)
     else:
         data[target] = data[target].fillna(0)
     data = data.fillna(999)
 
-    drop_features = list(set(['batter_name','position','height/weight','year_born','team','career'] + config.lag_features))
+    drop_features = list(set(['batter_name','position','height/weight','year_born','team','career'] + lag_features))
     x_data = data.drop(drop_features, axis=1)
     print(x_data.info())
     y_data = data[[target, 'AB', 'G']]
@@ -97,6 +107,26 @@ def split_data(data, config, target):
 
 
     return x_train, y_train, x_val, y_val, x_test, y_test
+
+def height_weight_fillna(data):
+    h_w_df = pd.read_csv('../dataset/batter_height_weight.csv')
+    h_w_df.loc[:,'height'] = h_w_df.height.apply(lambda x: str(x)[:-2] + 'cm' if str(x)!='nan' else x)
+    h_w_df.loc[:,'weight'] = h_w_df.weight.apply(lambda x: str(x)[:-2] + 'kg' if str(x)!='nan' else x)
+    h_w_df.loc[:,'height/weight'] = h_w_df[['height','weight']].apply(lambda x: str(x[0]) + '/' + str(x[1]) if str(x[0]) != 'nan' else np.nan, axis=1)
+
+    null_names = data[data['height/weight'].isnull()].batter_name.unique()
+    for name in null_names:
+        data.loc[data.batter_name==name,'height/weight'] = h_w_df.loc[h_w_df.batter_name==name,'height/weight'].iloc[0]
+    return data
+
+def pre_season_concat(data):
+    pre = pd.read_csv('../dataset/Pre_Season_Batter.csv', index_col=0)
+    pre.avg = pre.avg.replace('-', np.nan)
+    pre.avg = pre.avg.astype('float')
+    pre.loc[:,'season'] = '0'
+    data.loc[:,'season'] = '1'
+    data = pd.concat([data,pre], axis=0)
+    return data
 
 def weight_height_(data):
     data.loc[:,'height'] = data['height/weight'].apply(lambda x: np.nan if str(x) == 'nan' else x.split('/')[0][:3]).astype(float)

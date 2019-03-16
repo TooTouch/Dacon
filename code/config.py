@@ -12,9 +12,9 @@ class Config:
                                 '도미니카', '도미니카 Elias Rodriguez(고)', '도미니카 산토도밍고고', '도미니카 알레한드로 바쓰고',
                                 '도미니카 엘세이보고', '네덜란드 Voorben Praktyk(고)']
         self.lag_features = ['avg', 'G', 'AB', 'R', 'H', '2B', '3B',
-                               'HR', 'TB', 'RBI', 'SB', 'CS', 'BB', 'HBP', 'SO', 'GDP', 'SLG', 'OBP',
-                               'E','OPS']
-        self.total_features = ['G', 'AB', 'R', 'H','2B', '3B', 'HR', 'TB', 'RBI', 'SB', 'CS', 'BB', 'HBP', 'SO']
+                               'HR', 'TB', 'RBI', 'BB', 'SO', 'GDP', 'SLG', 'OBP','SB', 'CS','HBP','E' ,
+                               'OPS']
+        self.total_features = ['G', 'AB', 'R', 'H', '2B', '3B', 'HR', 'TB', 'RBI', 'BB', 'SO','SB', 'CS','HBP','E' ]
         self.params = {
                     "learning_rate": 0.1,
                     "n_estimators": 10000,
